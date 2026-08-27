@@ -334,6 +334,12 @@ def wait_captcha_or_modal(driver, timeout):
         time.sleep(0.3)
     return "none"
 
+def _legacy_cookie_path(account_id):
+    """升级前使用 MD5 命名 Cookie 文件，仅用于匹配旧缓存文件名（非安全用途）。"""
+    legacy_hash = hashlib.md5(account_id.encode()).hexdigest()[:16]
+    return os.path.join("temp", "cookies", f"{legacy_hash}.json")
+
+
 def save_cookies(driver, account_id):
     if not account_id:
         return
@@ -354,7 +360,19 @@ def load_cookies(driver, account_id):
         return False
     account_hash = hashlib.sha256(account_id.encode()).hexdigest()[:16]
     cookie_path = os.path.join("temp", "cookies", f"{account_hash}.json")
-    
+
+    # 兼容升级前用 MD5 命名的旧 Cookie 缓存：命中则原子重命名迁移为新命名
+    if not os.path.exists(cookie_path):
+        legacy_path = _legacy_cookie_path(account_id)
+        if os.path.exists(legacy_path):
+            try:
+                os.makedirs("temp/cookies", exist_ok=True)
+                os.replace(legacy_path, cookie_path)
+                logger.info("已将旧 MD5 Cookie 缓存迁移为 SHA-256 命名")
+            except Exception as e:
+                logger.warning(f"迁移旧 Cookie 失败，回退使用旧路径: {e}")
+                cookie_path = legacy_path
+
     if not os.path.exists(cookie_path):
         logger.info("未找到本地 Cookie，将使用账号密码登录")
         return False
