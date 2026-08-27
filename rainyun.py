@@ -122,13 +122,13 @@ def get_random_user_agent(account_id: str) -> str:
         f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{current_ver-2}.0.0.0 Safari/537.36",
     ]
     
-    account_hash = hashlib.md5(account_id.encode()).hexdigest()
+    account_hash = hashlib.sha256(account_id.encode()).hexdigest()
     seed = int(account_hash[:8], 16)
     rng = random.Random(seed)
     return rng.choice(user_agents)
 
 def generate_fingerprint_script(account_id: str):
-    account_hash = hashlib.md5(account_id.encode()).hexdigest()
+    account_hash = hashlib.sha256(account_id.encode()).hexdigest()
     seed = int(account_hash[:8], 16)
     rng = random.Random(seed)
     
@@ -338,7 +338,7 @@ def save_cookies(driver, account_id):
     if not account_id:
         return
     os.makedirs("temp/cookies", exist_ok=True)
-    account_hash = hashlib.md5(account_id.encode()).hexdigest()[:16]
+    account_hash = hashlib.sha256(account_id.encode()).hexdigest()[:16]
     cookie_path = os.path.join("temp", "cookies", f"{account_hash}.json")
     
     try:
@@ -352,7 +352,7 @@ def save_cookies(driver, account_id):
 def load_cookies(driver, account_id):
     if not account_id:
         return False
-    account_hash = hashlib.md5(account_id.encode()).hexdigest()[:16]
+    account_hash = hashlib.sha256(account_id.encode()).hexdigest()[:16]
     cookie_path = os.path.join("temp", "cookies", f"{account_hash}.json")
     
     if not os.path.exists(cookie_path):
@@ -705,12 +705,22 @@ def parse_accounts():
     
     return accounts
 
+def _safe_int(env_value, default, name=""):
+    """安全地把环境变量解析为整数；非法值时回退默认值并打印警告，不抛出异常。"""
+    try:
+        return int(env_value)
+    except (ValueError, TypeError):
+        if name:
+            print(f"警告: 环境变量 {name} 值无效: {env_value!r}，已回退默认值 {default}")
+        return default
+
+
 def run_all_accounts():
     import concurrent.futures
 
-    max_retries = int(os.getenv("CHECKIN_MAX_RETRIES", "2"))
-    max_workers = int(os.getenv("MAX_WORKERS", "3"))
-    stagger_delay = int(os.getenv("MAX_DELAY", "15"))
+    max_retries = _safe_int(os.getenv("CHECKIN_MAX_RETRIES", "2"), 2, "CHECKIN_MAX_RETRIES")
+    max_workers = _safe_int(os.getenv("MAX_WORKERS", "3"), 3, "MAX_WORKERS")
+    stagger_delay = _safe_int(os.getenv("MAX_DELAY", "15"), 15, "MAX_DELAY")
     
     accounts = parse_accounts()
     results = {}
@@ -823,8 +833,8 @@ def run_all_accounts():
 
 
 if __name__ == "__main__":
-    timeout = int(os.getenv("TIMEOUT", "15000")) // 1000
-    max_delay = int(os.getenv("MAX_DELAY", "5"))
+    timeout = _safe_int(os.getenv("TIMEOUT", "15000"), 15000, "TIMEOUT") // 1000
+    max_delay = _safe_int(os.getenv("MAX_DELAY", "5"), 5, "MAX_DELAY")
     debug = os.getenv("DEBUG", "false").lower() == "true"
     linux = os.getenv("LINUX_MODE", "true").lower() == "true" or os.path.exists("/.dockerenv")
     

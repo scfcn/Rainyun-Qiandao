@@ -11,15 +11,15 @@ jobs:
     permissions:
       actions: write  # 允许删除缓存
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26  # 钉到不可变 commit SHA（原 @v3）
       
       - name: 设置Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c  # 钉到不可变 commit SHA（原 @v4）
         with:
           python-version: '3.9'
       
       - name: 缓存Python依赖
-        uses: actions/cache@v3
+        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c  # 钉到不可变 commit SHA（原 @v3）
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}
@@ -94,7 +94,7 @@ jobs:
         run: mkdir -p temp/cookies
 
       - name: 恢复Cookie缓存
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@6f8efc29b200d32929f49075959781ed54ec270c  # 钉到不可变 commit SHA（原 @v3）
         with:
           path: temp/cookies
           key: rainyun-cookies-${{ steps.hash.outputs.user_hash }}-${{ github.run_id }}
@@ -148,7 +148,7 @@ jobs:
           MAX_RETRIES: "1"
       
       - name: 保存Cookie缓存
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@6f8efc29b200d32929f49075959781ed54ec270c  # 钉到不可变 commit SHA（原 @v3）
         if: always() && hashFiles('temp/cookies/**') != ''
         with:
           path: temp/cookies
@@ -166,4 +166,4 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: liskin/gh-workflow-keepalive@v1
+      - uses: liskin/gh-workflow-keepalive@f72ff1a1336129f29bf0166c0fd0ca6cf1bcb38c  # 钉到不可变 commit SHA（原 @v1）

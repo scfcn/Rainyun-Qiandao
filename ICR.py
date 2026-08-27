@@ -300,7 +300,11 @@ def display_black_regions(original_image, rectangles):
         cv2.putText(img_with_rectangles, str(i + 1), (x, y - 5),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-    import matplotlib.pyplot as plt
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("警告: 未安装 matplotlib，跳过可视化（调试功能）。可执行 pip install matplotlib 启用。")
+        return
 
     # 显示结果
     plt.figure(figsize=(10, 6))
@@ -394,7 +398,11 @@ def analyze_rotated_regions(sprite_mask, sprite_black_regions):
 
 def display_rotation_analysis(rotation_data, original_sprite):
     """展示每个sprite区域的旋转分析结果"""
-    import matplotlib.pyplot as plt
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("警告: 未安装 matplotlib，跳过可视化（调试功能）。可执行 pip install matplotlib 启用。")
+        return
 
     for idx, region_data in enumerate(rotation_data):
         plt.figure(figsize=(16, 8))
@@ -650,7 +658,11 @@ def display_matches_on_background(original_bg, matches):
         cv2.putText(bg_with_matches, text, (bg_x, bg_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
-    import matplotlib.pyplot as plt
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("警告: 未安装 matplotlib，跳过可视化（调试功能）。可执行 pip install matplotlib 启用。")
+        return
 
     # 显示结果
     plt.figure(figsize=(12, 8))
@@ -676,7 +688,11 @@ def display_match_comparisons(original_bg, original_sprite, matches):
         print("No matches found")
         return
 
-    import matplotlib.pyplot as plt
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("警告: 未安装 matplotlib，跳过可视化（调试功能）。可执行 pip install matplotlib 启用。")
+        return
 
     # 创建一个大图，每个match一行，每行3列
     fig, axes = plt.subplots(num_matches, 3, figsize=(12, 4 * num_matches))
@@ -757,20 +773,23 @@ def main(bg_data, sprite_data, match_method='template', show_results=False, show
 
     # 如果需要显示预处理结果
     if show_preprocessed:
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print("警告: 未安装 matplotlib，跳过预处理结果可视化（调试功能）。可执行 pip install matplotlib 启用。")
+        else:
+            plt.figure(figsize=(12, 6))
 
-        plt.figure(figsize=(12, 6))
+            plt.subplot(1, 2, 1)
+            plt.imshow(bg_mask, cmap='gray')
+            plt.title('Preprocessed Background')
 
-        plt.subplot(1, 2, 1)
-        plt.imshow(bg_mask, cmap='gray')
-        plt.title('Preprocessed Background')
+            plt.subplot(1, 2, 2)
+            plt.imshow(sprite_mask, cmap='gray')
+            plt.title('Preprocessed Sprite')
 
-        plt.subplot(1, 2, 2)
-        plt.imshow(sprite_mask, cmap='gray')
-        plt.title('Preprocessed Sprite')
-
-        plt.tight_layout()
-        plt.show()
+            plt.tight_layout()
+            plt.show()
 
     # 提取背景图像中的黑色区域并合并重叠的（选取最大的10个）
     bg_black_regions = extract_black_regions(bg_mask, 50, merge_distance=5)[:10]
